@@ -1,6 +1,7 @@
 // this controller will have all middleware functions required by the places-routes.js
 //no need to require express as this is not being used here
 
+const { v4: uuidv4 } = require('uuid');
 const HttpError = require("../models/http-error");
 
 const DUMMY_PLACES = [
@@ -51,9 +52,25 @@ const getPlaceByUserId = (req, res, next) => {
   });
 };
 
+const createPlace = (req, res, next) => {
+  //using object desctructuring to get req.body data
+  const { title, description, coordinates, address, creator } = req.body;
+  const createdPlace = {
+    id:uuidv4(),
+    title,
+    description,
+    location: coordinates,
+    address,
+    creator,
+  };
+
+  DUMMY_PLACES.push(createdPlace); //or can use unshift(createdPlace) if you want to add this to the first place
+  res.status(201).json({ message: "New Place added: ", place: createdPlace });
+};
 
 //module.exports allow to export single component
 
-// this need to be export sparate: 
+// this need to be export sparate:
 exports.getPlacebyId = getPlacebyId;
-exports.getPlaceByUserId= getPlaceByUserId;
+exports.getPlaceByUserId = getPlaceByUserId;
+exports.createPlace = createPlace;
