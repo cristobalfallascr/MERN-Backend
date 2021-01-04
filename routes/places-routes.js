@@ -8,15 +8,23 @@ const PlacesControllers = require("../controllers/places-controllers");
 const router = express.Router();
 
 //==== > GET routes
- //route to api/places/:pId
+//route to api/places/:pId
 router.get("/:pId", PlacesControllers.getPlacebyId);
 
 // route to /api/places/users/:uid
-router.get("/user/:uId", PlacesControllers.getPlaceByUserId);
+router.get("/user/:uId", PlacesControllers.getPlacesByUserId);
 
-//==== > POST routes
+//==== > POST/PATCH routes
 //route to api/place/
-router.post('/',PlacesControllers.createPlace);
+router.post("/", PlacesControllers.createPlace);
+
+//route to api/place/:pId to update/patch a place
+
+router.patch("/:pId", PlacesControllers.updatePlace);
+
+//route to /api/place/:pId to delete a place by ID
+
+router.delete("/:pId", PlacesControllers.deletePlace);
 
 //exports
 module.exports = router;
