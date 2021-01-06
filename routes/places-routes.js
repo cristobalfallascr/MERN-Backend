@@ -1,4 +1,6 @@
 const express = require("express");
+//importing check as object desctructuring
+const { check } = require("express-validator");
 
 const HttpError = require("../models/http-error");
 
@@ -16,11 +18,28 @@ router.get("/user/:uId", PlacesControllers.getPlacesByUserId);
 
 //==== > POST/PATCH routes
 //route to api/place/
-router.post("/", PlacesControllers.createPlace);
+// using express-validation, you can pass more than one middleware on the same method
+router.post(
+  "/",
+  [
+    check("title").not().isEmpty(),
+    check("description").isLength({ min: 5 }),
+    check("address").not().isEmpty(),
+  ],
+  PlacesControllers.createPlace
+);
 
 //route to api/place/:pId to update/patch a place
-
-router.patch("/:pId", PlacesControllers.updatePlace);
+//using express-validation, chain method
+router.patch(
+  "/:pId",
+  [
+    check("title").not().isEmpty(),
+    check("description").isLength({ min: 5 }),
+    check("address").not().isEmpty(),
+  ],
+  PlacesControllers.updatePlace
+);
 
 //route to /api/place/:pId to delete a place by ID
 

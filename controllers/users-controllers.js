@@ -2,6 +2,7 @@
 
 const HttpError = require("../models/http-error");
 const { v4: uuidv4 } = require("uuid");
+const { validationResult } = require("express-validator");
 
 const DUMMY_USERS = [
   {
@@ -28,14 +29,26 @@ const getAllUsers = (req, res, next) => {
 };
 
 const signup = (req, res, next) => {
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    const failedInputs = errors.errors;
+    console.log(failedInputs);
+    failedInputs.map((input) => {
+      console.log(input.param);
+      
+    });
+
+    throw new HttpError("Invalid inputs provided ", 400)
+  }
   const { name, email, password } = req.body;
 
-  const hasUser = DUMMY_USERS.find(user => user.email === email);
+  const hasUser = DUMMY_USERS.find((user) => user.email === email);
 
-  if(hasUser){
-      throw new HttpError('Could not create user, email already exists', 422);
+  if (hasUser) {
+    throw new HttpError("Could not create user, email already exists", 422);
   }
-  
+
   const createdUser = {
     id: uuidv4(),
     name,
@@ -47,6 +60,11 @@ const signup = (req, res, next) => {
 };
 
 const login = (req, res, next) => {
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    throw new HttpError("Invalid credentials provided ", 401)
+  }
   const { email, password } = req.body;
   const identifiedUser = DUMMY_USERS.find((user) => user.email === email);
   if (!identifiedUser || identifiedUser.password !== password) {

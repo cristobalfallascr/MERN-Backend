@@ -1,4 +1,5 @@
 const express = require("express");
+const {check} = require("express-validator");
 
 const HttpError = require("../models/http-error");
 
@@ -11,12 +12,21 @@ const router = express.Router();
 router.get("/", usersControllers.getAllUsers);
 
 //path to /signup to the application
+//using express-validator for post
 
-router.post("/signup", usersControllers.signup);
+router.post("/signup",[
+    check('name').not().isEmpty(),
+    check('email').isEmail(),
+    check('password').isLength({min:4})
+
+],usersControllers.signup);
 
 //path to /login
 
-router.post("/login", usersControllers.login);
+router.post("/login",[
+    check('email').isEmail(),
+    check('password').not().isEmpty(),
+], usersControllers.login);
 
 //exports
 module.exports = router;
