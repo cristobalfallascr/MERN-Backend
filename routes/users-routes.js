@@ -16,17 +16,20 @@ router.get("/", usersControllers.getAllUsers);
 
 router.post("/signup",[
     check('name').not().isEmpty(),
-    check('email').isEmail(),
-    check('password').isLength({min:4})
+    check('email').normalizeEmail().isEmail(),
+    check('password').isLength({min:6})
 
 ],usersControllers.signup);
 
 //path to /login
+//although not needed, the login itself will validate invalid info
 
-router.post("/login",[
-    check('email').isEmail(),
-    check('password').not().isEmpty(),
-], usersControllers.login);
+router.post("/login",
+// [
+//     check('email').isEmail(),
+//     check('password').not().isEmpty(),
+// ]
+ usersControllers.login);
 
 //exports
 module.exports = router;
