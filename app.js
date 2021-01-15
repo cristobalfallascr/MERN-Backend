@@ -34,7 +34,7 @@ app.use((error, req, res, next) => {
 
 // use the connect method. this will return a promise as this is async task
 mongoose
-  .connect("mongodb+srv://cris05:"+MONGO_DB_PASS+"@cluster0.1wlk1.mongodb.net/places?retryWrites=true&w=majority", { useNewUrlParser: true, useUnifiedTopology: true })
+  .connect("mongodb+srv://[]:"+MONGO_DB_PASS+"@cluster0.1wlk1.mongodb.net/places?retryWrites=true&w=majority", { useNewUrlParser: true, useUnifiedTopology: true })
   //if connection is successful, we start the backend server
   .then(() => {
     console.log("Connection to DB is established")
