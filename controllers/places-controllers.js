@@ -6,6 +6,7 @@ const { validationResult } = require("express-validator");
 
 const HttpError = require("../models/http-error");
 const getCoordsForAddress = require("../util/location");
+const Place = require("../models/place");
 
 let DUMMY_PLACES = [
   {
@@ -70,16 +71,21 @@ const createPlace = async (req, res, next) => {
     return next(error);
   }
 
-  const createdPlace = {
-    id: uuidv4(),
+  const createdPlace = new Place({
     title,
     description,
-    location: coordinates,
     address,
+    location: coordinates,
+    image: "gets",
     creator,
-  };
+  });
+  try {
+    await createdPlace.save();
+  } catch (err) {
+    const error = new HttpError("Creating place failed, please try again", 500);
+    return(next(error));
+  }
 
-  DUMMY_PLACES.push(createdPlace); //or can use unshift(createdPlace) if you want to add this to the first place
   res.status(201).json({ message: "New Place added: ", place: createdPlace });
 };
 
