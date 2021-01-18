@@ -1,12 +1,17 @@
+require("dotenv").config();
 const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 
-
 const placesRoutes = require("./routes/places-routes");
 const usersRoutes = require("./routes/users-routes");
 const HttpError = require("./models/http-error");
-const {MONGO_DB_PASS} = require('./util/priv');
+
+const username = process.env.DB_USER;
+const password = process.env.DB_PASS;
+const dbname = process.env.DB_NAME;
+const dbUrl = `mongodb+srv://${username}:${password}@cluster0.1wlk1.mongodb.net/${dbname}?retryWrites=true&w=majority`;
+
 const app = express();
 
 app.use(bodyParser.json());
@@ -34,14 +39,14 @@ app.use((error, req, res, next) => {
 
 // use the connect method. this will return a promise as this is async task
 mongoose
-  .connect("mongodb+srv://cris05:"+MONGO_DB_PASS+"@cluster0.1wlk1.mongodb.net/places?retryWrites=true&w=majority", { useNewUrlParser: true, useUnifiedTopology: true })
+  .connect(dbUrl, { useNewUrlParser: true, useUnifiedTopology: true })
   //if connection is successful, we start the backend server
   .then(() => {
-    console.log("Connection to DB is established")
+    console.log("Connection to DB is established");
     app.listen(5000, () => {
       console.log("App listening on port 5000");
     });
   })
-  .catch((err)=>{
+  .catch((err) => {
     console.log(err);
   });

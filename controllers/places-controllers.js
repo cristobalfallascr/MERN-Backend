@@ -22,30 +22,43 @@ let DUMMY_PLACES = [
   },
 ];
 
-const getPlacebyId = (req, res, next) => {
+const getPlacebyId = async (req, res, next) => {
   //to access dynamic path, use ":" and specify parameter name, then use req.params.pId to get access
   const placeId = req.params.pId;
-  const place = DUMMY_PLACES.find((p) => {
-    return p.id === placeId;
-  });
+  let place;
+  try {
+    place = await Place.findById(placeId); //this does not return promise
+  } catch (err) {
+    const error = new HttpError(
+      "Something went wrong, could not find a place",
+      500
+    );
+
+    return next(error);
+  }
 
   if (!place) {
-    throw new HttpError(
+    const error = new HttpError(
       "could not find a place for the provided place ID",
       404
     );
+    return next(error);
   }
 
-  res.json({ place: place });
+  res.json({ place: place.toObject({ getters: true }) });
   // if the name of the property is equal to name of variable, then you can use just the property "place"
 };
 
-const getPlacesByUserId = (req, res, next) => {
+const getPlacesByUserId = async (req, res, next) => {
   const userId = req.params.uId;
-  //filter will return any places with same user ID while. .find() only returns one place
-  const places = DUMMY_PLACES.filter((p) => {
-    return p.creator === userId;
-  });
+  let places;
+  try {
+    //find in mongoose returns an array
+    places = await Place.find({ creator: userId });
+  } catch (err) {
+    const error = HttpError("     Something went wrong, try again later", 500);
+    return next(error);
+  }
 
   if (!places || places.length === 0) {
     return next(
@@ -53,7 +66,7 @@ const getPlacesByUserId = (req, res, next) => {
     );
   }
   res.json({
-    places,
+    places: places.map((place) => place.toObject({ getters: true })),
   });
 };
 
@@ -83,7 +96,7 @@ const createPlace = async (req, res, next) => {
     await createdPlace.save();
   } catch (err) {
     const error = new HttpError("Creating place failed, please try again", 500);
-    return(next(error));
+    return next(error);
   }
 
   res.status(201).json({ message: "New Place added: ", place: createdPlace });
