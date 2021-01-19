@@ -151,12 +151,28 @@ const updatePlace = async (req, res, next) => {
   });
 };
 
-const deletePlace = (req, res, next) => {
+const deletePlace = async (req, res, next) => {
   const placeId = req.params.pId;
-  if (!DUMMY_PLACES.find((place) => place.id === placeId)) {
-    throw new HttpError("Could not find a place to delete", 404);
+
+  let place;
+
+  try {
+    place = await Place.findById(placeId);
+  } catch (err) {
+    const error = new HttpError(
+      " something went wrong, no place was found",
+      500
+    );
+    return next(error);
   }
-  DUMMY_PLACES = DUMMY_PLACES.filter((place) => place.id !== placeId); // filter array and return a new array where the identified place is ignored
+
+  try {
+    await place.remove();
+  } catch (err) {
+    const error = new HttpError(" unable to remove place", 500);
+    return next(error);
+  }
+
   res.status(200).json({ message: "Place has been deleted" });
 };
 
