@@ -102,31 +102,53 @@ const createPlace = async (req, res, next) => {
   res.status(201).json({ message: "New Place added: ", place: createdPlace });
 };
 
-const updatePlace = (req, res, next) => {
+const updatePlace = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    throw new HttpError("Invalid inputs, cannot update", 421);
+    const error = new HttpError(
+      "Something went wrong, could not find a place",
+      500
+    );
+    return next(error);
   }
   const { title, description } = req.body;
   const placeId = req.params.pId;
-  const updatedPlace = {
-    ...DUMMY_PLACES.find((place) => place.id === placeId),
-  }; // spread operator to create a copy of the original place
-  console.log(updatedPlace.id);
-  const placeIndex = DUMMY_PLACES.findIndex((place) => place.id === placeId); //find index of the place
 
-  if (!updatedPlace.id) {
-    throw new HttpError("Cannot update the place as it doest not exist", 404);
+  let place;
+
+  try {
+    place = await Place.findById(placeId);
+  } catch (err) {
+    const error = new HttpError(
+      "Something went wrong, could not find a place",
+      500
+    );
+    return next(error);
+  }
+
+  if (!place.id) {
+    const error = new HttpError("Place not found, it cannot be updated", 404);
+    return next(error);
   }
   //update the title and description for the place
-  updatedPlace.title = title;
-  updatedPlace.description = description;
+  place.title = title;
+  place.description = description;
   // update the array with the new place, the object being updated is the one in the identified index
-  DUMMY_PLACES[placeIndex] = updatedPlace;
+
+  try {
+    await place.save();
+  } catch (err) {
+    const error = new HttpError(
+      "Something went wrong, could not find a place",
+      500
+    );
+    return next(error);
+  }
   //send response status
-  res
-    .status(200)
-    .json({ message: "Updated successfully", place: updatedPlace });
+  res.status(200).json({
+    message: "Updated successfully",
+    place: place.toObject({ getters: true }),
+  });
 };
 
 const deletePlace = (req, res, next) => {
