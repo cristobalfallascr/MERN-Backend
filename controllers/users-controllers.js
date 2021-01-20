@@ -1,8 +1,9 @@
 // this controller will have all middleware functions required by the users
 
-const HttpError = require("../models/http-error");
 const { v4: uuidv4 } = require("uuid");
 const { validationResult } = require("express-validator");
+const HttpError = require("../models/http-error");
+const User = require("../models/user");
 
 const DUMMY_USERS = [
   {
@@ -28,42 +29,51 @@ const getAllUsers = (req, res, next) => {
   res.status(200).json({ users: users });
 };
 
-const signup = (req, res, next) => {
+const signup = async (req, res, next) => {
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
-    const failedInputs = errors.errors;
-    console.log(failedInputs);
-    failedInputs.map((input) => {
-      console.log(input.param);
-      
-    });
-
-    throw new HttpError("Invalid inputs provided ", 400)
+ const error = new HttpError("Invalid inputs provided ", 400);
+ return next(error);
   }
-  const { name, email, password } = req.body;
-
-  const hasUser = DUMMY_USERS.find((user) => user.email === email);
-
-  if (hasUser) {
-    throw new HttpError("Could not create user, email already exists", 422);
+  const { name, email, password, places} = req.body;
+  let existingUser;
+  try {
+    existingUser = await User.findOne({ email: email });
+  } catch (err) {
+    const error = new HttpError("Signing up failed, try again later", 500);
+    return next(error);
+  }
+  if (existingUser) {
+    const error = new HttpError(" User exists, please login instead", 422);
+    return next(error);
   }
 
-  const createdUser = {
-    id: uuidv4(),
+  const createdUser = new User({
     name,
     email,
+    image: "only for demo purposes",
     password,
-  };
-  DUMMY_USERS.push(createdUser);
-  res.status(201).json({ message: "User has been created", user: createdUser });
+    places,
+  });
+
+  try {
+    await createdUser.save();
+  } catch (err) {
+    const error = new HttpError("error.", 500);
+    return next(error);
+  }
+  res.status(201).json({
+    user: createdUser.toObject({ getters: true }),
+    message: " User created",
+  });
 };
 
 const login = (req, res, next) => {
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
-    throw new HttpError("Invalid credentials provided ", 401)
+    throw new HttpError("Invalid credentials provided ", 401);
   }
   const { email, password } = req.body;
   const identifiedUser = DUMMY_USERS.find((user) => user.email === email);
