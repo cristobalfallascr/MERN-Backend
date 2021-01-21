@@ -9,7 +9,7 @@ const usersControllers = require("../controllers/users-controllers");
 const router = express.Router();
 
 // path to get to all users in application
-router.get("/", usersControllers.getAllUsers);
+router.get("/", usersControllers.getUsers);
 
 //path to /signup to the application
 //using express-validator for post

@@ -11,7 +11,8 @@ const placeSchema = new Schema({
     lng: { type: Number, required: true },
   },
   address: { type: String, required: true },
-  creator: { type: String, required: true },
+  // to establish relationship between two documents, use the below
+  creator: { type: mongoose.Types.ObjectId, ref: "User", required: true },
 });
 
 //.model takes two parameters, the name of the model and the schema of the model

@@ -19,23 +19,28 @@ const DUMMY_USERS = [
   },
 ];
 
-let users = [];
-const getAllUsers = (req, res, next) => {
-  DUMMY_USERS.forEach((user) => {
-    users.push(user.name);
-  });
+const getUsers = async (req, res, next) => {
+  //using projections to get only the data required
+  let users;
+  try {
+    users = await User.find({}, " -password");
+  } catch (err) {
+    const error = new HttpError("Fetching users failed, please try later", 500);
+  }
 
-  res.status(200).json({ users: users });
+  res
+    .status(200)
+    .json({ users: users.map((user) => user.toObject({ getters: true })) });
 };
 
 const signup = async (req, res, next) => {
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
- const error = new HttpError("Invalid inputs provided ", 400);
- return next(error);
+    const error = new HttpError("Invalid inputs provided ", 400);
+    return next(error);
   }
-  const { name, email, password, places} = req.body;
+  const { name, email, password } = req.body;
   let existingUser;
   try {
     existingUser = await User.findOne({ email: email });
@@ -53,7 +58,8 @@ const signup = async (req, res, next) => {
     email,
     image: "only for demo purposes",
     password,
-    places,
+    //define the below as an empty array
+    places: [],
   });
 
   try {
@@ -84,19 +90,16 @@ const login = async (req, res, next) => {
     return next(error);
   }
 
-  if(!existingUser || existingUser.password !== password){
-    const error = new HttpError(' invalid credentials', 401);
+  if (!existingUser || existingUser.password !== password) {
+    const error = new HttpError(" invalid credentials", 401);
     return next(error);
-
   }
-
-  
 
   res.json({ message: "logged in successfully" });
 };
 
 //export controllers functions
 
-exports.getAllUsers = getAllUsers;
+exports.getUsers = getUsers;
 exports.signup = signup;
 exports.login = login;

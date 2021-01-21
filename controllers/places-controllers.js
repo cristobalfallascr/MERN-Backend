@@ -3,10 +3,13 @@
 
 const { v4: uuidv4 } = require("uuid");
 const { validationResult } = require("express-validator");
+const mongoose = require('mongoose');
 
 const HttpError = require("../models/http-error");
 const getCoordsForAddress = require("../util/location");
 const Place = require("../models/place");
+const User = require("../models/user");
+
 
 let DUMMY_PLACES = [
   {
@@ -90,10 +93,35 @@ const createPlace = async (req, res, next) => {
     address,
     location: coordinates,
     image: "gets",
+    //
     creator,
   });
+  let user;
+
   try {
-    await createdPlace.save();
+    user = await User.findById(creator);
+  } catch (err) {
+    const error = new HttpError("Creating place failed, please try again", 500);
+    return next(error);
+  }
+  if (!user) {
+    const error = new HttpError("user not found", 404);
+    return next(error);
+  }
+  try {
+    //use transactions and sessions
+    //create the session
+    const sess = await mongoose.startSession();
+    //request for transaction inside the session
+    sess.startTransaction();
+    //save the place
+    await createdPlace.save({ session: sess });
+    //save the created place ID in the user.places property
+    user.places.push(createdPlace);
+    //save the changes in the user
+    await user.save({ session: sess });
+    //commit the transation, this is the only moment when db is updated
+    await sess.commitTransaction();
   } catch (err) {
     const error = new HttpError("Creating place failed, please try again", 500);
     return next(error);
