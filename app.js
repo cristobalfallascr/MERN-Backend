@@ -16,6 +16,14 @@ const app = express();
 
 app.use(bodyParser.json());
 
+// this middleware will handle CORS errors to allow request from the front end going to the backend
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Headers', 'Origing, X-Requested-With, Content-Type, Accept, Authorization');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE');
+  next();
+});
+
 app.use("/api/places", placesRoutes); // initial path is specified as /api/places
 app.use("/api/users", usersRoutes); // initial path is /api/users
 
@@ -43,7 +51,7 @@ mongoose
   //if connection is successful, we start the backend server
   .then(() => {
     console.log("Connection to DB is established");
-    app.listen(5000, () => {
+    app.listen(process.env.PORT || 8081, () => {
       console.log("App listening on port 5000");
     });
   })
